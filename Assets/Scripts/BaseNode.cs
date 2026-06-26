@@ -1,34 +1,92 @@
-using Enums;
 using UnityEngine;
+using Enums;
 
+[RequireComponent(typeof(NodeVisuals))]
+[DisallowMultipleComponent]
 public class BaseNode : MonoBehaviour
 {
-    [Header("Data")]
-    public TeamType currentTeam;
-    public int unitCount = 10;
-    public int maxUnitCount = 50;
+    [Header("Node Settings")]
+    [SerializeField, Tooltip("Kulenin başlangıçtaki sahibi.")] 
+    private TeamType _currentTeam;
     
-    public float spawnInterval = 1f;
-    private float timer = 0f;
+    [SerializeField, Tooltip("Başlangıç asker sayısı.")] 
+    private int _unitCount = 10;
+    
+    [SerializeField, Tooltip("Maksimum birikebilecek asker sayısı.")] 
+    private int _maxUnitCount = 50;
+    
+    [SerializeField, Tooltip("Asker üretim hızı (saniye cinsinden).")] 
+    private float _spawnInterval = 1f;
 
-    private NodeVisuals visuals;
+    private float _timer = 0f;
+    private NodeVisuals _visuals;
+    
+    private NodeManager _nodeManager; 
+    public bool IsPlayerOwned => _currentTeam == TeamType.Player;
+    public TeamType CurrentTeam => _currentTeam;
+    public int UnitCount => _unitCount;
 
-    void Awake()
+    private void Awake()
     {
-        visuals = GetComponent<NodeVisuals>();
+        _visuals = GetComponent<NodeVisuals>();
     }
 
-    void Update()
+    private void Start()
     {
-        if (currentTeam != TeamType.Neutral && unitCount < maxUnitCount)
+        _nodeManager = NodeManager.Instance; 
+        
+        if (_nodeManager != null)
         {
-            timer += Time.deltaTime;
-            if (timer >= spawnInterval)
+            _nodeManager.RegisterNode(this);
+        }
+        
+        _visuals.UpdateTeamColor(_currentTeam);
+        UpdateTextVisual();
+    }
+
+    private void OnEnable()
+    {
+        if (NodeManager.Instance != null)
+            NodeManager.Instance.RegisterNode(this);
+    }
+
+    private void OnDisable()
+    {
+        if (NodeManager.Instance != null)
+            NodeManager.Instance.UnregisterNode(this);
+    }
+
+    public void Tick(float deltaTime)
+    {
+        if (_currentTeam != TeamType.Neutral && _unitCount < _maxUnitCount)
+        {
+            _timer += deltaTime;
+            if (_timer >= _spawnInterval)
             {
-                unitCount++;
-                timer = 0f;
-                visuals.UpdateVisuals(currentTeam, unitCount);
+                _unitCount++;
+                
+                _timer -= _spawnInterval; 
+                
+                UpdateTextVisual(); 
             }
         }
+    }
+
+     private void UpdateTextVisual()
+    {
+        if (_nodeManager != null)
+        {
+            string numString = _nodeManager.GetCachedNumber(_unitCount);
+            _visuals.UpdateText(numString);
+        }
+    }
+
+    public void ChangeTeam(TeamType newTeam, int newCount)
+    {
+        _currentTeam = newTeam;
+        _unitCount = newCount;
+        
+        _visuals.UpdateTeamColor(_currentTeam);
+        UpdateTextVisual();
     }
 }
