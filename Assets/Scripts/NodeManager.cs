@@ -1,14 +1,20 @@
 using System.Collections.Generic;
 using UnityEngine;
+using Enums;
 
+[DisallowMultipleComponent]
 public class NodeManager : MonoBehaviour
 {
     public static NodeManager Instance { get; private set; }
 
-    private List<BaseNode> _allNodes = new List<BaseNode>();
-
+    private readonly List<BaseNode> _nodes = new List<BaseNode>();
     private string[] _cachedNumbers;
-    private const int MAX_CACHED_NUMBERS = 100;
+    public const int MAX_CACHED_NUMBERS = 500;
+
+    [Header("Global Team Colors")]
+    [SerializeField] private Color _neutralColor = Color.gray;
+    [SerializeField] private Color _playerColor = Color.blue;
+    [SerializeField] private Color _enemyColor = Color.red;
 
     private void Awake()
     {
@@ -35,45 +41,36 @@ public class NodeManager : MonoBehaviour
     public string GetCachedNumber(int number)
     {
         if (number >= 0 && number < MAX_CACHED_NUMBERS)
-        {
             return _cachedNumbers[number];
-        }
         return number.ToString(); 
     }
 
     public void RegisterNode(BaseNode node)
     {
-        if (!_allNodes.Contains(node))
-            _allNodes.Add(node);
+        if (!_nodes.Contains(node)) _nodes.Add(node);
     }
 
     public void UnregisterNode(BaseNode node)
     {
-        if (_allNodes.Contains(node))
-           _allNodes.Remove(node);
-    }
-    private void OnEnable()
-    {
-        InputManager.OnAttackIssued += HandleAttackIssued;
+        if (_nodes.Contains(node)) _nodes.Remove(node);
     }
 
-    private void OnDisable()
+    public Color GetTeamColor(TeamType team)
     {
-        InputManager.OnAttackIssued -= HandleAttackIssued;
+        return team switch
+        {
+            TeamType.Player => _playerColor,
+            TeamType.Enemy => _enemyColor,
+            _ => _neutralColor,
+        };
     }
 
-    private void HandleAttackIssued(AttackData attackData)
-    {
-        Debug.Log($"HÜCUM BAŞLADI: {attackData.StartNode.name} kulesinden, {attackData.TargetNode.name} kulesine saldırı emri verildi!");
-        
-    }
     private void Update()
     {
         float dt = Time.deltaTime;
-        
-        for (int i = 0; i < _allNodes.Count; i++)
+        for (int i = 0; i < _nodes.Count; i++)
         {
-            _allNodes[i].Tick(dt);
+            _nodes[i].Tick(dt);
         }
     }
 }
