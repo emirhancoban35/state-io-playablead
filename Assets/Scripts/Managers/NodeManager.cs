@@ -1,10 +1,14 @@
 using System.Collections.Generic;
 using UnityEngine;
 using Enums;
+using Config;
 
 [DisallowMultipleComponent]
 public class NodeManager : MonoBehaviour
 {
+    [Header("Master Config")]
+    [SerializeField] private PlayableConfig _config;
+    public PlayableConfig Config => _config;
     public static NodeManager Instance { get; private set; }
 
     private readonly List<BaseNode> _nodes = new List<BaseNode>();

@@ -4,19 +4,16 @@ using UnityEngine;
 [DisallowMultipleComponent]
 public class InputManager : MonoBehaviour
 {
-    // Olaylar (Events) tamamen parçalandı. Çizgiyi çizecek adama anlık haber veriyoruz.
     public static event Action<BaseNode> OnDragStarted;
     public static event Action<Vector2> OnDragUpdated;
     public static event Action OnDragCanceled;
-    public static event Action<AttackData> OnAttackIssued;
-
+    
     [Header("Settings")]
     [SerializeField] private LayerMask _nodeLayer;
     
     private Camera _mainCamera;
     private BaseNode _startNode;
-
-    // Oyunu durdurduğumuzda (Kazanma/Kaybetme) input'u kesmek için Global kilit
+    private BaseNode _hoveredNode;
     public static bool CanInput { get; set; } = true;
 
     private void Awake()
@@ -26,11 +23,11 @@ public class InputManager : MonoBehaviour
 
     private void Update()
     {
-        if (!CanInput) return; // Oyun durduysa parmağı okuma
+        if (!CanInput) return;
 
         if (Input.GetMouseButtonDown(0))
             StartDrag();
-        else if (Input.GetMouseButton(0) && _startNode != null) // Gereksiz _isDragging silindi
+        else if (Input.GetMouseButton(0) && _startNode != null)
             UpdateDrag();
         else if (Input.GetMouseButtonUp(0) && _startNode != null)
             EndDrag();
@@ -49,8 +46,21 @@ public class InputManager : MonoBehaviour
 
     private void UpdateDrag()
     {
-        Vector2 mousePos = GetMouseWorldPosition();
-        OnDragUpdated?.Invoke(mousePos);
+        OnDragUpdated?.Invoke(GetMouseWorldPosition());
+
+        BaseNode currentNode = GetNodeUnderPointer();
+
+        if (currentNode != _hoveredNode)
+        {
+            if (_hoveredNode != null) _hoveredNode.GetComponent<NodeVisuals>().SetHighlight(false);
+            
+            _hoveredNode = currentNode;
+
+            if (_hoveredNode != null && _hoveredNode != _startNode)
+            {
+                _hoveredNode.GetComponent<NodeVisuals>().SetHighlight(true);
+            }
+        }
     }
 
     private void EndDrag()
@@ -59,20 +69,22 @@ public class InputManager : MonoBehaviour
 
         if (targetNode != null && targetNode != _startNode)
         {
-            // Atak emri (DTO) fırlatıldı!
-            OnAttackIssued?.Invoke(new AttackData { StartNode = _startNode, TargetNode = targetNode });
+            GameEvents.OnAttackIssued?.Invoke(new AttackData { StartNode = _startNode, TargetNode = targetNode });
         }
 
-        // Çizgiyi sıfırlaması için haber ver
+        if (_hoveredNode != null)
+        {
+            _hoveredNode.GetComponent<NodeVisuals>().SetHighlight(false);
+            _hoveredNode = null;
+        }
+
         OnDragCanceled?.Invoke();
         _startNode = null;
     }
 
-    // DRY (Don't Repeat Yourself) - Fiziksel nokta kontrolü tek bir yere toplandı
     private BaseNode GetNodeUnderPointer()
     {
         Vector2 mousePos = GetMouseWorldPosition();
-        // Raycast silindi! 2D nokta kontrolü inanılmaz hafiftir.
         Collider2D col = Physics2D.OverlapPoint(mousePos, _nodeLayer);
         return col != null ? col.GetComponent<BaseNode>() : null;
     }

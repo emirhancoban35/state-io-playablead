@@ -30,7 +30,7 @@ public class LineController : MonoBehaviour
     private void HandleDragStarted(BaseNode startNode)
     {
         _startNode = startNode;
-        _lineRenderer.enabled = true; // Çizgiyi aç
+        _lineRenderer.enabled = true;
         _lineRenderer.positionCount = 2;
         
         Vector3 startPos = _startNode.transform.position;

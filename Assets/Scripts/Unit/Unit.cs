@@ -1,7 +1,6 @@
 using System;
 using UnityEngine;
 using Enums;
-[RequireComponent(typeof(SpriteRenderer), typeof(CircleCollider2D), typeof(Rigidbody2D))]
 public class Unit : MonoBehaviour
 {
 
@@ -14,6 +13,8 @@ public class Unit : MonoBehaviour
     private BaseNode _targetNode;
     private TeamType _myTeam;
     private bool _isMoving = false;
+    
+    public TeamType Team => _myTeam;
 
     private void Awake()
     {

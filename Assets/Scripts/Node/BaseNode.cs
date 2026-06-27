@@ -38,10 +38,11 @@ public class BaseNode : MonoBehaviour
         if (_nodeManager != null)
         {
             _nodeManager.RegisterNode(this);
+            
+            _visuals.Initialize(_nodeManager);
         }
-        
-        _visuals.UpdateTeamColor(_currentTeam);
-        UpdateTextVisual();
+
+        UpdateVisualData();
     }
 
     private void OnEnable()
@@ -67,26 +68,28 @@ public class BaseNode : MonoBehaviour
                 
                 _timer -= _spawnInterval; 
                 
-                UpdateTextVisual(); 
+                UpdateVisualData(); 
             }
         }
+        _visuals.TickVisuals(deltaTime);
     }
-
-     private void UpdateTextVisual()
-    {
-        if (_nodeManager != null)
-        {
-            string numString = _nodeManager.GetCachedNumber(_unitCount);
-            _visuals.UpdateText(numString);
-        }
-    }
-
     public void ChangeTeam(TeamType newTeam, int newCount)
     {
         _currentTeam = newTeam;
         _unitCount = newCount;
-        
-        _visuals.UpdateTeamColor(_currentTeam);
-        UpdateTextVisual();
+        UpdateVisualData();
+    }
+    public void TakeDamage(int newCount)
+    {
+        _unitCount = newCount;
+        _visuals.PlayDamageAnimation();
+        UpdateVisualData();
+    }
+    private void UpdateVisualData()
+    {
+        if (_nodeManager != null)
+        {
+            _visuals.UpdateVisuals(_currentTeam, _unitCount, _maxUnitCount);
+        }
     }
 }
