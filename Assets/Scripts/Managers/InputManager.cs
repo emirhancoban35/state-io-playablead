@@ -15,6 +15,8 @@ public class InputManager : MonoBehaviour
     private BaseNode _startNode;
     private BaseNode _hoveredNode;
     public static bool CanInput { get; set; } = true;
+    
+    private bool _firstInteractionLogged = false;
 
     private void Awake()
     {
@@ -35,8 +37,13 @@ public class InputManager : MonoBehaviour
 
     private void StartDrag()
     {
-        BaseNode hitNode = GetNodeUnderPointer();
+        if (!_firstInteractionLogged && PlayableManager.Instance != null)
+        {
+            _firstInteractionLogged = true;
+            PlayableManager.Instance.SendEvent("first_interaction");
+        }
         
+        BaseNode hitNode = GetNodeUnderPointer();
         if (hitNode != null && hitNode.IsPlayerOwned)
         {
             _startNode = hitNode;
@@ -66,12 +73,12 @@ public class InputManager : MonoBehaviour
     private void EndDrag()
     {
         BaseNode targetNode = GetNodeUnderPointer();
-
-        if (targetNode != null && targetNode != _startNode)
+        
+        if (targetNode != null && targetNode != _startNode && _startNode.IsPlayerOwned)
         {
             GameEvents.OnAttackIssued?.Invoke(new AttackData { StartNode = _startNode, TargetNode = targetNode });
         }
-
+        
         if (_hoveredNode != null)
         {
             _hoveredNode.Visuals.SetHighlight(false);
@@ -81,7 +88,6 @@ public class InputManager : MonoBehaviour
         OnDragCanceled?.Invoke();
         _startNode = null;
     }
-
     private BaseNode GetNodeUnderPointer()
     {
         Vector2 mousePos = GetMouseWorldPosition();

@@ -62,5 +62,16 @@ public class UIManager : MonoBehaviour
 
         _targetPlayerRatio = (float)playerNodes / totalNodes;
         _targetNeutralFillRatio = _targetPlayerRatio + ((float)neutralNodes / totalNodes);
+        
+        if (_targetPlayerRatio >= 0.8f) 
+        {
+            PlayableManager.Instance.SendEvent("level_win");
+            PlayableManager.Instance.RedirectToStore();
+        }
+        else if (_targetNeutralFillRatio <= 0f && _targetPlayerRatio == 0f)
+        {
+            PlayableManager.Instance.SendEvent("level_lose");
+            PlayableManager.Instance.RedirectToStore(); 
+        }
     }
 }
