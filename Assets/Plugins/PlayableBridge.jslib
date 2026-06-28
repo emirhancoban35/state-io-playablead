@@ -14,7 +14,6 @@ mergeInto(LibraryManager.library, {
 
     LogPlayableEvent: function(eventName) {
         var eventStr = UTF8ToString(eventName);
-        console.log("[Playable Data] Olay Kaydedildi: " + eventStr);
         
         if (typeof dapi !== 'undefined' && dapi.isReady()) {
             // dapi.logEvent(eventStr);
