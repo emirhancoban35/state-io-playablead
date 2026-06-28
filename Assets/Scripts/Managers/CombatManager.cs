@@ -67,7 +67,7 @@ public class CombatManager : MonoBehaviour
 
             Vector3 spawnPos = startNode.transform.position + (perpendicular * offsetMagnitude);
             
-            unit.Initialize(team, targetNode, spawnPos, teamColor);
+            unit.Initialize(team, targetNode, spawnPos, teamColor, _config.UnitMoveSpeed);
             _activeUnits.Add(unit);
 
             yield return _cachedSpawnDelay; 
