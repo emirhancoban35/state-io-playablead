@@ -1,5 +1,9 @@
 # State.io - Playable Ad Prototype
 
+<p align="center">
+  <img src="Media/gameplay.gif" width="320"/>
+</p>
+
 A lightweight playable ad prototype inspired by State.io, built with a strong focus on performance, scalability and mobile web optimization.
 
 ## Technical Highlights
