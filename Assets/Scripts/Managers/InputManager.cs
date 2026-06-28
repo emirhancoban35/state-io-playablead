@@ -52,13 +52,13 @@ public class InputManager : MonoBehaviour
 
         if (currentNode != _hoveredNode)
         {
-            if (_hoveredNode != null) _hoveredNode.GetComponent<NodeVisuals>().SetHighlight(false);
+            if (_hoveredNode != null) _hoveredNode.Visuals.SetHighlight(false);
             
             _hoveredNode = currentNode;
 
             if (_hoveredNode != null && _hoveredNode != _startNode)
             {
-                _hoveredNode.GetComponent<NodeVisuals>().SetHighlight(true);
+                _hoveredNode.Visuals.SetHighlight(true);
             }
         }
     }
@@ -74,7 +74,7 @@ public class InputManager : MonoBehaviour
 
         if (_hoveredNode != null)
         {
-            _hoveredNode.GetComponent<NodeVisuals>().SetHighlight(false);
+            _hoveredNode.Visuals.SetHighlight(false);
             _hoveredNode = null;
         }
 

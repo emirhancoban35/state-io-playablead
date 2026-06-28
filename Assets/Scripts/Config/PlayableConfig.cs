@@ -1,4 +1,5 @@
 using UnityEngine;
+using Enums;
 
 namespace Config
 {	
@@ -32,5 +33,15 @@ namespace Config
 
 		[Range(1f, 20f), Tooltip("Renk geçişlerinin yumuşaklık hızı")]
 		public float ColorLerpSpeed = 5f;
+		
+		public Color GetTeamColor(TeamType team)
+		{
+			return team switch
+			{
+				TeamType.Player => PlayerColor,
+				TeamType.Enemy => EnemyColor,
+				_ => NeutralColor
+			};
+		}
 	}
 }

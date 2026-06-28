@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using UnityEngine;
-using Enums;
 using Config;
 
 [DisallowMultipleComponent]
@@ -8,18 +7,15 @@ public class NodeManager : MonoBehaviour
 {
     [Header("Master Config")]
     [SerializeField] private PlayableConfig _config;
-    public PlayableConfig Config => _config;
+    public PlayableConfig Config => _config; 
+    
     public static NodeManager Instance { get; private set; }
 
     private readonly List<BaseNode> _nodes = new List<BaseNode>();
+    public IReadOnlyList<BaseNode> AllNodes => _nodes;
     private string[] _cachedNumbers;
     public const int MAX_CACHED_NUMBERS = 500;
-
-    [Header("Global Team Colors")]
-    [SerializeField] private Color _neutralColor = Color.gray;
-    [SerializeField] private Color _playerColor = Color.blue;
-    [SerializeField] private Color _enemyColor = Color.red;
-
+    
     private void Awake()
     {
         if (Instance == null)
@@ -57,16 +53,6 @@ public class NodeManager : MonoBehaviour
     public void UnregisterNode(BaseNode node)
     {
         if (_nodes.Contains(node)) _nodes.Remove(node);
-    }
-
-    public Color GetTeamColor(TeamType team)
-    {
-        return team switch
-        {
-            TeamType.Player => _playerColor,
-            TeamType.Enemy => _enemyColor,
-            _ => _neutralColor,
-        };
     }
 
     private void Update()

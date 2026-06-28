@@ -11,6 +11,19 @@ public class EnemyAI : MonoBehaviour
     private float _thinkInterval = 3f;
 
     private WaitForSeconds _cachedThinkDelay;
+    
+    private bool _hasGameStarted = false;
+
+    private void OnEnable()
+    {
+        // Oyuncu çizgi çekmeye (oynamaya) başladığı an AI'ı uyandır
+        InputManager.OnDragStarted += WakeUpAI;
+    }
+
+    private void OnDisable()
+    {
+        InputManager.OnDragStarted -= WakeUpAI;
+    }
 
     private void Start()
     {
@@ -20,50 +33,42 @@ public class EnemyAI : MonoBehaviour
 
     private IEnumerator AILoop()
     {
-        // Oyun çalıştığı sürece dönen zeka döngüsü
         while (true)
         {
             yield return _cachedThinkDelay;
             MakeDecision();
         }
     }
+    private void WakeUpAI(BaseNode node)
+    {
+        _hasGameStarted = true;
+        
+        InputManager.OnDragStarted -= WakeUpAI;
+    }
 
     private void MakeDecision()
     {
-        // 1. Sahnedeki tüm kuleleri bul (Playable projelerinde çok az kule olduğu için FindObjectsOfType kabul edilebilir,
-        // ama en doğrusu NodeManager üzerinden listeyi çekmektir. Şimdilik hızlı test için böyle yapıyoruz).
-        BaseNode[] allNodes = FindObjectsOfType<BaseNode>();
-
-        // 2. Kırmızı (Enemy) kuleleri bul ve içlerinde en az 10 askeri olanları filtrele
+        if (!_hasGameStarted) return;
+        
+        var allNodes = NodeManager.Instance.AllNodes;
         List<BaseNode> myNodes = allNodes.Where(n => n.CurrentTeam == TeamType.Enemy && n.UnitCount > 10).ToList();
 
-        if (myNodes.Count == 0) return; // Saldıracak gücüm yoksa pas geç
+        if (myNodes.Count == 0) return;
 
-        // 3. Rastgele bir kulemi seç
         BaseNode attackerNode = myNodes[Random.Range(0, myNodes.Count)];
 
-        // 4. Hedef bul (Benim olmayan kuleler: Player veya Neutral)
         List<BaseNode> targetNodes = allNodes.Where(n => n.CurrentTeam != TeamType.Enemy).ToList();
 
-        if (targetNodes.Count == 0) return; // Hedef kalmadıysa (oyunu Enemy kazandıysa) dur
+        if (targetNodes.Count == 0) return; 
 
-        // 5. Rastgele bir hedef seç
         BaseNode targetNode = targetNodes[Random.Range(0, targetNodes.Count)];
 
-        // 6. ŞOV KISMI: Aynı InputManager'ın (oyuncunun) yaptığı gibi SİSTEME EMİR FIRLAT!
-        // Sistem emri AI mı verdi, oyuncu mu verdi bilmez, sadece emri uygular.
+
         AttackData attackCommand = new AttackData
         {
             StartNode = attackerNode,
             TargetNode = targetNode
         };
-
-        // Bu event'i manuel tetikliyoruz (Reflection veya doğrudan bağlı olan bir kanaldan tetikletebiliriz,
-        // Ancak InputManager'daki event'i tetiklemek için InputManager'da tetikleyici bir public metod açmamız gerekebilir).
         GameEvents.OnAttackIssued?.Invoke(new AttackData { StartNode = attackerNode, TargetNode = targetNode });
-        // DÜZELTME: Event'ler (Action) sadece tanımlandığı sınıfın İÇİNDEN Invoke edilebilir.
-        // Bu yüzden InputManager.OnAttackIssued event'ini dışarıdan tetikleyemeyiz.
-        // Çözüm: CombatManager'daki komutu AI için doğrudan çağırılabilir yapabiliriz VEYA
-        // InputManager'a "SimulateAttack" diye bir public metod ekleriz.
     }
 }

@@ -43,29 +43,26 @@ public class NodeVisuals : MonoBehaviour
         if (_unitText != null) 
             _unitText.text = _nodeManager.GetCachedNumber(count);
 
-        Color baseColor = team switch
-        {
-            TeamType.Player => _config.PlayerColor,
-            TeamType.Enemy => _config.EnemyColor,
-            _ => _config.NeutralColor
-        };
+        Color baseColor = _config.GetTeamColor(team);
 
         float intensityRatio = Mathf.Clamp01((float)count / maxCount);
         _targetCircleColor = Color.Lerp(Color.white, baseColor, 0.4f + (intensityRatio * 0.6f)); 
         _targetMapColor = Color.Lerp(Color.white, baseColor, 0.15f + (intensityRatio * 0.35f)); 
-
-        if (team != TeamType.Neutral)
-        {
+    }
+    public void PlayPulseAnimation()
+    {
+        if (_config != null)
             transform.localScale = _originalScale * _config.HeartbeatPulseAmount;
-        }
     }
 
     public void PlayDamageAnimation()
     {
         if (_config != null)
-            transform.localScale = _originalScale * _config.DamageShrinkAmount; 
+        {
+            float randomPunch = Random.Range(0f, 0.05f); 
+            transform.localScale = _originalScale * (_config.DamageShrinkAmount - randomPunch);
+        }
     }
-
     public void SetHighlight(bool isHighlighted)
     {
         if (_highlightRing != null) _highlightRing.SetActive(isHighlighted);
@@ -75,13 +72,12 @@ public class NodeVisuals : MonoBehaviour
     {
         if (_config == null) return;
 
-        if (transform.localScale != _targetScale)
-            transform.localScale = Vector3.Lerp(transform.localScale, _targetScale, deltaTime * _config.ScaleLerpSpeed);
+        transform.localScale = Vector3.Lerp(transform.localScale, _targetScale, deltaTime * _config.ScaleLerpSpeed);
 
-        if (_circleSprite != null && _circleSprite.color != _targetCircleColor)
+        if (_circleSprite != null)
             _circleSprite.color = Color.Lerp(_circleSprite.color, _targetCircleColor, deltaTime * _config.ColorLerpSpeed);
 
-        if (_mapSprite != null && _mapSprite.color != _targetMapColor)
+        if (_mapSprite != null)
             _mapSprite.color = Color.Lerp(_mapSprite.color, _targetMapColor, deltaTime * _config.ColorLerpSpeed);
     }
 }

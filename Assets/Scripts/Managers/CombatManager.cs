@@ -22,7 +22,7 @@ public class CombatManager : MonoBehaviour
     private void Start()
     {
         _config = NodeManager.Instance.Config;
-        _cachedSpawnDelay = new WaitForSeconds(_config.SpawnDelay); // Paneldeki hıza bağlandı
+        _cachedSpawnDelay = new WaitForSeconds(_config.SpawnDelay);
     }
     private void OnEnable()
     {
@@ -50,8 +50,7 @@ public class CombatManager : MonoBehaviour
     private IEnumerator SpawnUnitsRoutine(BaseNode startNode, BaseNode targetNode, int amount)
     {
         TeamType team = startNode.CurrentTeam;
-        Color teamColor = NodeManager.Instance.GetTeamColor(team); 
-
+        Color teamColor = _config.GetTeamColor(team);
         Vector3 direction = (targetNode.transform.position - startNode.transform.position).normalized;
         
         Vector3 perpendicular = new Vector3(-direction.y, direction.x, 0);
@@ -101,7 +100,7 @@ public class CombatManager : MonoBehaviour
 
         if (newCount > 0)
         {
-            targetNode.ChangeTeam(targetNode.CurrentTeam, newCount);
+            targetNode.TakeDamage(newCount);
         }
         else if (newCount == 0)
         {
@@ -122,8 +121,12 @@ public class CombatManager : MonoBehaviour
         for (int i = _activeUnits.Count - 1; i >= 0; i--)
         {
             Unit unitA = _activeUnits[i];
-            
-            if (!unitA.gameObject.activeInHierarchy) continue;
+
+            if (!unitA.gameObject.activeInHierarchy)
+            {
+                _activeUnits.RemoveAt(i);
+                continue; 
+            }
 
             for (int j = i - 1; j >= 0; j--)
             {
@@ -133,7 +136,6 @@ public class CombatManager : MonoBehaviour
 
                 if (unitA.Team != unitB.Team)
                 {
-
                     float sqrDistance = (unitA.transform.position - unitB.transform.position).sqrMagnitude;
                     
                     if (sqrDistance < 0.04f)
@@ -141,11 +143,11 @@ public class CombatManager : MonoBehaviour
                         PoolManager.Instance.ReturnUnit(unitA);
                         PoolManager.Instance.ReturnUnit(unitB);
                         
-                        break; 
+                        _activeUnits.RemoveAt(i);
+                        break;
                     }
                 }
             }
         }
-        _activeUnits.RemoveAll(u => !u.gameObject.activeInHierarchy);
     }
 }

@@ -1,5 +1,6 @@
 using UnityEngine;
 using Enums;
+using System;
 
 [RequireComponent(typeof(NodeVisuals))]
 [DisallowMultipleComponent]
@@ -19,16 +20,37 @@ public class BaseNode : MonoBehaviour
     private float _spawnInterval = 1f;
 
     private float _timer = 0f;
+    
     private NodeVisuals _visuals;
     
     private NodeManager _nodeManager; 
     public bool IsPlayerOwned => _currentTeam == TeamType.Player;
     public TeamType CurrentTeam => _currentTeam;
     public int UnitCount => _unitCount;
+    
+    public static event Action OnNodeTeamChanged;
+    
+    public NodeVisuals Visuals => _visuals;
 
     private void Awake()
     {
         _visuals = GetComponent<NodeVisuals>();
+    }
+
+    private void OnEnable()
+    {
+        if (NodeManager.Instance != null)
+        {
+            NodeManager.Instance.RegisterNode(this);
+        }
+    }
+
+    private void OnDisable()
+    {
+        if (NodeManager.Instance != null)
+        {
+            NodeManager.Instance.UnregisterNode(this);
+        }
     }
 
     private void Start()
@@ -38,23 +60,10 @@ public class BaseNode : MonoBehaviour
         if (_nodeManager != null)
         {
             _nodeManager.RegisterNode(this);
-            
             _visuals.Initialize(_nodeManager);
         }
 
         UpdateVisualData();
-    }
-
-    private void OnEnable()
-    {
-        if (NodeManager.Instance != null)
-            NodeManager.Instance.RegisterNode(this);
-    }
-
-    private void OnDisable()
-    {
-        if (NodeManager.Instance != null)
-            NodeManager.Instance.UnregisterNode(this);
     }
 
     public void Tick(float deltaTime)
@@ -65,10 +74,9 @@ public class BaseNode : MonoBehaviour
             if (_timer >= _spawnInterval)
             {
                 _unitCount++;
-                
                 _timer -= _spawnInterval; 
-                
                 UpdateVisualData(); 
+                _visuals.PlayPulseAnimation();
             }
         }
         _visuals.TickVisuals(deltaTime);
@@ -78,12 +86,15 @@ public class BaseNode : MonoBehaviour
         _currentTeam = newTeam;
         _unitCount = newCount;
         UpdateVisualData();
+        _visuals.PlayPulseAnimation();
+        
+        OnNodeTeamChanged?.Invoke();
     }
     public void TakeDamage(int newCount)
     {
         _unitCount = newCount;
-        _visuals.PlayDamageAnimation();
         UpdateVisualData();
+        _visuals.PlayDamageAnimation(); 
     }
     private void UpdateVisualData()
     {
